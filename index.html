@@ -1,0 +1,393 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudSec Operations Center - Security Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #111827;
+            --border-color: #1f2937;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .title-group h1 {
+            font-size: 1.5rem;
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid var(--accent-green);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card-header {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Stat Cards */
+        .col-3 { grid-column: span 3; }
+        .col-4 { grid-column: span 4; }
+        .col-6 { grid-column: span 6; }
+        .col-8 { grid-column: span 8; }
+        .col-12 { grid-column: span 12; }
+
+        @media (max-width: 900px) {
+            .col-3, .col-4, .col-6, .col-8 { grid-column: span 12; }
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .stat-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Console / Log Terminal */
+        .terminal {
+            background-color: #05070a;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            height: 220px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+        }
+        .log-time { color: var(--text-muted); }
+        .log-info { color: var(--accent-blue); }
+        .log-warn { color: var(--accent-amber); }
+        .log-danger { color: var(--accent-red); }
+
+        /* Server Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .badge-secure {
+            color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .badge-attack {
+            color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        /* Action Buttons */
+        .btn {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-danger {
+            background-color: var(--accent-red);
+        }
+
+        .btn-warning {
+            background-color: var(--accent-amber);
+            color: black;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-group">
+            <h1>🛡️ CloudSec SOC Incident Monitoring Console</h1>
+        </div>
+        <div class="status-badge" id="system-status">● AWS/Azure Security Perimeter Active</div>
+    </header>
+
+    <div class="grid-container">
+        
+        <!-- Metrics -->
+        <div class="card col-3">
+            <div class="card-header">Active Cloud VMs</div>
+            <div class="stat-value" style="color: var(--accent-blue);" id="active-vms">4</div>
+            <div class="stat-desc">AWS EC2 / Azure Nodes</div>
+        </div>
+
+        <div class="card col-3">
+            <div class="card-header">Blocked Attacks</div>
+            <div class="stat-value" style="color: var(--accent-red);" id="blocked-attacks">128</div>
+            <div class="stat-desc">Brute Force & DDoS Attempts</div>
+        </div>
+
+        <div class="card col-3">
+            <div class="card-header">Network Bandwidth</div>
+            <div class="stat-value" style="color: var(--accent-amber);" id="network-speed">42 MB/s</div>
+            <div class="stat-desc">Inbound / Outbound Load</div>
+        </div>
+
+        <div class="card col-3">
+            <div class="card-header">IAM Compliance</div>
+            <div class="stat-value" style="color: var(--accent-green);">98.4%</div>
+            <div class="stat-desc">AWS CIS Benchmark Score</div>
+        </div>
+
+        <!-- Live Server Status Table -->
+        <div class="card col-8">
+            <div class="card-header">
+                Cloud Server Nodes
+                <button class="btn" onclick="addNewNode()">+ Provision New EC2 Node</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Instance ID</th>
+                        <th>Cloud Provider</th>
+                        <th>IP Address</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="server-table-body">
+                    <tr>
+                        <td>i-08a71f92e</td>
+                        <td>AWS (us-east-1)</td>
+                        <td>192.168.1.101</td>
+                        <td><span class="badge-secure">HEALTHY</span></td>
+                        <td><button class="btn btn-warning" onclick="simulateAttack(this, 'i-08a71f92e')">Simulate Cyber Attack</button></td>
+                    </tr>
+                    <tr>
+                        <td>az-vm-sec-02</td>
+                        <td>Azure (Central US)</td>
+                        <td>10.0.4.22</td>
+                        <td><span class="badge-secure">HEALTHY</span></td>
+                        <td><button class="btn btn-warning" onclick="simulateAttack(this, 'az-vm-sec-02')">Simulate Cyber Attack</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Incident Response Controls -->
+        <div class="card col-4">
+            <div class="card-header">SOC Rapid Threat Response</div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Execute automated security playbooks for instant cloud lockdown:</p>
+            <div class="controls">
+                <button class="btn btn-danger" onclick="triggerLockdown()">🔒 Enforce AWS Security Group Isolation</button>
+                <button class="btn" onclick="clearLogs()">🧹 Clear Console Logs</button>
+                <button class="btn btn-warning" onclick="exportReport()">📄 Export Threat Log Audit</button>
+            </div>
+        </div>
+
+        <!-- Security Terminal Log -->
+        <div class="card col-12">
+            <div class="card-header">
+                Real-Time Security Log Stream
+                <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">Auto-refreshing live SIEM feed</span>
+            </div>
+            <div class="terminal" id="terminal-log">
+                <div class="log-entry"><span class="log-time">[10:14:02]</span> <span class="log-info">[INFO]</span> CloudSec SIEM initialization complete. Connected to AWS CloudTrail & GuardDuty APIs.</div>
+                <div class="log-entry"><span class="log-time">[10:14:05]</span> <span class="log-info">[INFO]</span> Firewall Rule #104: Blocked inbound SSH connection from IP 185.220.101.5 (Suspicious ASN).</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let attackCount = 128;
+        let vmCount = 2;
+
+        // Function to write entry to SIEM Terminal
+        function logMessage(message, level = 'info') {
+            const terminal = document.getElementById('terminal-log');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            let levelTag = `<span class="log-info">[INFO]</span>`;
+            if (level === 'warn') levelTag = `<span class="log-warn">[WARN]</span>`;
+            if (level === 'danger') levelTag = `<span class="log-danger">[ALERT]</span>`;
+
+            const newLog = document.createElement('div');
+            newLog.className = 'log-entry';
+            newLog.innerHTML = `<span class="log-time">[${timestamp}]</span> ${levelTag} ${message}`;
+            
+            terminal.appendChild(newLog);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // Simulate Attack on Cloud Server
+        function simulateAttack(button, instanceId) {
+            const row = button.closest('tr');
+            const statusCell = row.cells[3];
+            
+            statusCell.innerHTML = `<span class="badge-attack">UNDER ATTACK</span>`;
+            logMessage(`SSH Brute Force attack detected on instance ${instanceId}! Multiple failed authentication attempts logged.`, 'danger');
+            
+            attackCount++;
+            document.getElementById('blocked-attacks').innerText = attackCount;
+
+            button.innerText = 'Remediate & Patch';
+            button.className = 'btn';
+            button.onclick = function() {
+                remediateServer(button, instanceId);
+            };
+        }
+
+        // Remediate Attack
+        function remediateServer(button, instanceId) {
+            const row = button.closest('tr');
+            const statusCell = row.cells[3];
+
+            statusCell.innerHTML = `<span class="badge-secure">HEALTHY</span>`;
+            logMessage(`Automated Playbook Executed: IP blocked in AWS WAF for ${instanceId}. Server restored to healthy status.`, 'info');
+
+            button.innerText = 'Simulate Cyber Attack';
+            button.className = 'btn btn-warning';
+            button.onclick = function() {
+                simulateAttack(button, instanceId);
+            };
+        }
+
+        // Provision New VM
+        function addNewNode() {
+            vmCount++;
+            document.getElementById('active-vms').innerText = vmCount;
+            
+            const tableBody = document.getElementById('server-table-body');
+            const newRow = document.createElement('tr');
+            const newId = `aws-ec2-0${Math.floor(Math.random() * 900 + 100)}`;
+            const randomIp = `172.31.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`;
+
+            newRow.innerHTML = `
+                <td>${newId}</td>
+                <td>AWS (ap-south-1)</td>
+                <td>${randomIp}</td>
+                <td><span class="badge-secure">HEALTHY</span></td>
+                <td><button class="btn btn-warning" onclick="simulateAttack(this, '${newId}')">Simulate Cyber Attack</button></td>
+            `;
+
+            tableBody.appendChild(newRow);
+            logMessage(`New cloud container ${newId} provisioned successfully with static IP ${randomIp}.`, 'info');
+        }
+
+        // Trigger Emergency Lockdown
+        function triggerLockdown() {
+            logMessage(`EMERGENCY: Executing Cloud Isolation Playbook! All inbound port 22/80 traffic restricted. AWS Security Groups updated.`, 'warn');
+            document.getElementById('system-status').innerText = '● SYSTEM IN HIGH RISK LOCKDOWN MODE';
+            document.getElementById('system-status').style.color = 'var(--accent-red)';
+            document.getElementById('system-status').style.borderColor = 'var(--accent-red)';
+        }
+
+        // Clear Logs
+        function clearLogs() {
+            document.getElementById('terminal-log').innerHTML = '';
+            logMessage('SIEM System console display cleared by administrator.', 'info');
+        }
+
+        // Export Report
+        function exportReport() {
+            alert("Threat Audit Log exported successfully as SECURITY_AUDIT_REPORT.CSV");
+            logMessage("Security Audit Report CSV generated and downloaded.", "info");
+        }
+
+        // Random log generation simulating network activity
+        setInterval(() => {
+            const events = [
+                "AWS S3 Bucket 'client-data-logs' scanned - 0 public vulnerabilities found.",
+                "SSL/TLS Certificate renewed for domain *.cloudsec.internal.",
+                "Port Scan detected from foreign subnetwork 103.45.12.99 - Auto-dropped by Cloud Firewall.",
+                "Kubernetes Cluster health check passed: All pods operational."
+            ];
+            const randomEvent = events[Math.floor(Math.random() * events.length)];
+            logMessage(randomEvent, 'info');
+        }, 12000);
+    </script>
+</body>
+</html>
